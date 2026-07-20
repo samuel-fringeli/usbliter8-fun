@@ -87,7 +87,7 @@ os.system("../tools/img4 -i iPhone12,3,iPhone12,5_27.0_24A5370h_Restore/Firmware
 # AVE
 if not os.path.exists("iPhone12,3,iPhone12,5_27.0_24A5370h_Restore/Firmware/ave/AppleAVE2FW_H12.im4p.bak"):
     os.system("cp iPhone12,3,iPhone12,5_27.0_24A5370h_Restore/Firmware/ave/AppleAVE2FW_H12.im4p iPhone12,3,iPhone12,5_27.0_24A5370h_Restore/Firmware/ave/AppleAVE2FW_H12.im4p.bak")
-    os.system("../tools/img4 -i iPhone12,3,iPhone12,5_27.0_24A5370h_Restore/Firmware/ave/AppleAVE2FW_H12.im4p.bak -o Ramdisk/AVE.img4 -M t8030_apticket.der -T avef")
+os.system("../tools/img4 -i iPhone12,3,iPhone12,5_27.0_24A5370h_Restore/Firmware/ave/AppleAVE2FW_H12.im4p.bak -o Ramdisk/AVE.img4 -M t8030_apticket.der -T avef")
 
 # SPTM
 if not os.path.exists("iPhone12,3,iPhone12,5_27.0_24A5370h_Restore/Firmware/sptm.t8030.release.im4p.bak"):
@@ -168,13 +168,13 @@ if not os.path.exists("iPhone12,3,iPhone12,5_27.0_24A5370h_Restore/094-13753-132
 os.system("pyimg4 im4p extract -i iPhone12,3,iPhone12,5_27.0_24A5370h_Restore/094-13753-132.dmg.bak -o ramdisk.dmg")
 # 
 os.system("mkdir SSHRD")
-os.system("sudo hdiutil attach -mountpoint SSHRD ramdisk.dmg -owners off")
-os.system("sudo hdiutil create -size 254m -imagekey diskimage-class=CRawDiskImage -format UDZO -fs APFS -layout NONE -srcfolder SSHRD -copyuid root ramdisk1.dmg")
-os.system("sudo hdiutil detach -force SSHRD")
-os.system("sudo hdiutil attach -mountpoint SSHRD ramdisk1.dmg -owners off")
+os.system("sudo -A hdiutil attach -mountpoint SSHRD ramdisk.dmg -owners off")
+os.system("sudo -A hdiutil create -size 254m -imagekey diskimage-class=CRawDiskImage -format UDZO -fs APFS -layout NONE -srcfolder SSHRD -copyuid root ramdisk1.dmg")
+os.system("sudo -A hdiutil detach -force SSHRD")
+os.system("sudo -A hdiutil attach -mountpoint SSHRD ramdisk1.dmg -owners off")
 # sys.stdin.read(1)
 #remove unneccessary files for expand space
-os.system("sudo ../tools/gtar -x --no-overwrite-dir -f ssh.tar.gz -C SSHRD/")
+os.system("sudo -A ../tools/gtar -x --no-overwrite-dir -f ssh.tar.gz -C SSHRD/")
 os.system("rm SSHRD/usr/bin/img4tool")
 os.system("rm SSHRD/usr/bin/img4")
 os.system("rm SSHRD/usr/sbin/dietappleh13camerad")
@@ -183,8 +183,8 @@ os.system("rm SSHRD/usr/local/bin/wget")
 os.system("rm SSHRD/usr/local/bin/procexp")
 # Fix sftp-server not working
 os.system(f"../tools/ldid_macosx_arm64 -Ssftp_server_ents.plist -M -Cadhoc SSHRD/usr/libexec/sftp-server")
-os.system("sudo hdiutil detach -force SSHRD")
-os.system("sudo hdiutil resize -sectors min ramdisk1.dmg")
+os.system("sudo -A hdiutil detach -force SSHRD")
+os.system("sudo -A hdiutil resize -sectors min ramdisk1.dmg")
 # sign
 os.system("pyimg4 im4p create -i ramdisk1.dmg -o ramdisk1.dmg.im4p -f rdsk")
 os.system("pyimg4 img4 create -p ramdisk1.dmg.im4p -o Ramdisk/RestoreRamdisk.img4 -m t8030_apticket.der")

@@ -97,7 +97,7 @@ os.system("../tools/img4 -i iPhone12,3,iPhone12,5_27.0_24A5370h_Restore/Firmware
 # AVE
 if not os.path.exists("iPhone12,3,iPhone12,5_27.0_24A5370h_Restore/Firmware/ave/AppleAVE2FW_H12.im4p.bak"):
     os.system("cp iPhone12,3,iPhone12,5_27.0_24A5370h_Restore/Firmware/ave/AppleAVE2FW_H12.im4p iPhone12,3,iPhone12,5_27.0_24A5370h_Restore/Firmware/ave/AppleAVE2FW_H12.im4p.bak")
-    os.system("../tools/img4 -i iPhone12,3,iPhone12,5_27.0_24A5370h_Restore/Firmware/ave/AppleAVE2FW_H12.im4p.bak -o Ramdisk/AVE.img4 -M t8030_apticket.der -T avef")
+os.system("../tools/img4 -i iPhone12,3,iPhone12,5_27.0_24A5370h_Restore/Firmware/ave/AppleAVE2FW_H12.im4p.bak -o Ramdisk/AVE.img4 -M t8030_apticket.der -T avef")
 
 # SPTM
 if not os.path.exists("iPhone12,3,iPhone12,5_27.0_24A5370h_Restore/Firmware/sptm.t8030.release.im4p.bak"):
@@ -182,6 +182,11 @@ if not os.path.exists("iPhone12,3,iPhone12,5_27.0_24A5370h_Restore/Firmware/all_
 os.system("../tools/img4 -i iPhone12,3,iPhone12,5_27.0_24A5370h_Restore/Firmware/all_flash/DeviceTree.d421ap.im4p.bak -o DeviceTree.raw")
 # os.system("./dt_patch3.py DeviceTree.raw --unencrypted-keybag-boot -o DeviceTree_patched.raw")
 os.system("./dt_patch2.py DeviceTree.raw -o DeviceTree_patched.raw")
+os.system("./set_ephemeral.py DeviceTree_patched.raw")   # set /chosen/ephemeral-storage=1
+# REVERTED: set_system_rw.py (System vol.fs_type ro->rw) làm boot đen xì -> bỏ.
+# os.system("./set_system_rw.py DeviceTree_patched.raw")
+# DISABLED: disable-transport-rm=1 caused device to fail booting on this device/build -> reverted
+# os.system("./set_dt_u32.py DeviceTree_patched.raw disable-transport-rm 1")  # disable transport restore-mode
 os.system("../tools/img4tool -c DeviceTree.im4p -t dtre DeviceTree_patched.raw")
 os.system("../tools/img4 -i DeviceTree.im4p -o Ramdisk/DeviceTree.img4 -M t8030_apticket.der -T rdtr")
 
@@ -226,6 +231,25 @@ patch(0x1f1ebe0+4, 0xD2800020)        # MOV             X0, #1
 patch(0x1f1ebe0+8, 0xB4000043)      # cbz x3, #8
 patch(0x1f1ebe0+12, 0xF9000060)      # STR             X0, [X3]
 patch(0x1f1ebe0+16, 0xD65F03C0)     # RET
+
+# ========= Bypass USB Restricted Mode (kernel method) =========
+# isDeviceInRestoreMode() @ VA 0xFFFFFFF009898B68 -> always return 1.
+# Tricks the USB stack into "restore mode" so USB Restricted Mode is bypassed
+# (usbmux/lockdown come up even before unlock/activation). This is the CLEAN way
+# vs DeviceTree disable-transport-rm=1 which bricked normal boot on this device.
+patch(0x2894b68, 0xd2800020)        # mov x0, #1
+patch(0x2894b68+4, 0xd65f03c0)      # ret
+
+# ========= Sandbox MACF hooks -> mov x0,#0; ret =========
+# Cho /var/jb binaries (Procursus bootstrap: dpkg/apt/Sileo) mmap/mount/rename được.
+# Tìm động: mac_policy_conf("Sandbox"/"Seatbelt sandbox policy") -> mpc_ops(+32) -> ops[idx] (auth chained ptr, target=low32).
+for _sb in (0x2f774e0,   # file_check_mmap (index 36)  <- fix "sandbox blocked mmap /var/jb"
+            0x2f75640,   # mount_check_mount (87)
+            0x2f75474,   # mount_check_remount (88)
+            0x2f75110,   # mount_check_umount (91)
+            0x2f7019c):  # vnode_check_rename (120)
+    patch(_sb, 0xd2800000)       # mov x0, #0
+    patch(_sb+4, 0xd65f03c0)     # ret
 
 # ========= seprmvr64e? =========
 # prevent panic "unencrypted data volume is not allowed ..."

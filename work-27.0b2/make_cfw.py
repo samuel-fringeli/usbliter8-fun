@@ -21,6 +21,9 @@ def patch(offset, data):
     fp.flush()
 
 
+if not os.path.exists("Ramdisk"):
+    os.system("mkdir Ramdisk")
+
 if not os.path.exists("CFW"):
     os.system("cp -rf iPhone12,3,iPhone12,5_27.0_24A5370h_Restore CFW")
 
@@ -78,7 +81,7 @@ os.system("mkdir CFW_RD")
 if not os.path.exists("CFW/094-13753-132.dmg.bak"):
     os.system("cp CFW/094-13753-132.dmg CFW/094-13753-132.dmg.bak")
 os.system("pyimg4 im4p extract -i CFW/094-13753-132.dmg.bak -o ramdisk.dmg")
-os.system("sudo hdiutil attach -mountpoint CFW_RD ramdisk.dmg -owners off")
+os.system("sudo -A hdiutil attach -mountpoint CFW_RD ramdisk.dmg -owners off")
 # sys.stdin.read(1)
 # patch restored_external
 fp = open("CFW_RD/usr/local/bin/restored_external", "r+b") 
@@ -115,13 +118,13 @@ patch(0x24d34, 0xd503201f)      # nop
 fp.close()
 # sign
 os.system("../tools/ldid_macosx_arm64 -S -M -Cadhoc CFW_RD/usr/sbin/asr")
-os.system("sudo hdiutil detach -force CFW_RD")
+os.system("sudo -A hdiutil detach -force CFW_RD")
 os.system("pyimg4 im4p create -i ramdisk.dmg -o CFW/094-13753-132.dmg -f rdsk")
 
 
 # TXM
 if not os.path.exists("CFW/Firmware/txm.iphoneos.release.im4p.bak"):
-    os.system("cp CFW/Firmware/txm.iphoneos.release.im4p iPhone12,3,iPhone12,5_27.0_24A5370h_Restore/Firmware/txm.iphoneos.release.im4p.bak")
+    os.system("cp CFW/Firmware/txm.iphoneos.release.im4p CFW/Firmware/txm.iphoneos.release.im4p.bak")
 os.system("pyimg4 im4p extract -i CFW/Firmware/txm.iphoneos.release.im4p.bak -o TXM.raw")
 # patch 
 fp = open("TXM.raw", "r+b")
