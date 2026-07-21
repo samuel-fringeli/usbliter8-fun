@@ -40,3 +40,7 @@ work-27.0b2/vnc/trollvncserver
 .DS_Store
 __pycache__/
 *.pyc
+branch_structure.json
+temp_auto_push.bat
+temp_interactive_push.bat
+.gitignore

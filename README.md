@@ -68,7 +68,7 @@ After PWN DFU mode is done, plug the device back into the Mac, then:
 ```shell
 cd work-27.0b2
 ./make_cfw.py            # requires sudo, enter your password
-python3 tss_proxy_server.py & ./restore_cfw.sh
+python3 tss_proxy_server.py && ./restore_cfw.sh
 ```
 
 You'll see the restore progress bar on screen. Wait until the script is done and the device returns to recovery mode.
@@ -80,7 +80,7 @@ Re-enter DFU mode and PWN mode, plug it back into the Mac, then:
 ```shell
 ./get_rd.py
 ./boot_rd.sh
-iproxy 2222 22 & ../tools/sshpass -p alpine ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -p 2222 root@localhost
+iproxy 2222 22 && ../tools/sshpass -p alpine ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -p 2222 root@localhost
 ```
 
 On the SSH'd device, run:
